@@ -44,46 +44,18 @@ jobs:
 
       - name: Create macOS .app bundle
         if: matrix.goos == 'darwin'
+        env:
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          APP_NAME="Sansürsüz.app"
+          APP_NAME="Sansursuz.app"
           mkdir -p "${APP_NAME}/Contents/MacOS"
           mkdir -p "${APP_NAME}/Contents/Resources"
           
-          # Move binary into .app
           mv ${{ matrix.name }} "${APP_NAME}/Contents/MacOS/sansursuz"
           chmod +x "${APP_NAME}/Contents/MacOS/sansursuz"
           
-          # Create Info.plist
-          cat > "${APP_NAME}/Contents/Info.plist" << 'PLIST'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>CFBundleExecutable</key>
-            <string>sansursuz</string>
-            <key>CFBundleIdentifier</key>
-            <string>com.bexcod.sansursuz</string>
-            <key>CFBundleName</key>
-            <string>Sansürsüz</string>
-            <key>CFBundleDisplayName</key>
-            <string>Sansürsüz</string>
-            <key>CFBundleVersion</key>
-            <string>${{ github.ref_name }}</string>
-            <key>CFBundleShortVersionString</key>
-            <string>${{ github.ref_name }}</string>
-            <key>CFBundlePackageType</key>
-            <string>APPL</string>
-            <key>LSMinimumSystemVersion</key>
-            <string>11.0</string>
-            <key>LSUIElement</key>
-            <true/>
-            <key>NSHighResolutionCapable</key>
-            <true/>
-          </dict>
-          </plist>
-          PLIST
+          printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n<key>CFBundleExecutable</key>\n<string>sansursuz</string>\n<key>CFBundleIdentifier</key>\n<string>com.bexcod.sansursuz</string>\n<key>CFBundleName</key>\n<string>Sansursuz</string>\n<key>CFBundleDisplayName</key>\n<string>Sansursuz</string>\n<key>CFBundleVersion</key>\n<string>%s</string>\n<key>CFBundleShortVersionString</key>\n<string>%s</string>\n<key>CFBundlePackageType</key>\n<string>APPL</string>\n<key>LSMinimumSystemVersion</key>\n<string>11.0</string>\n<key>LSUIElement</key>\n<true/>\n<key>NSHighResolutionCapable</key>\n<true/>\n</dict>\n</plist>\n' "$TAG_NAME" "$TAG_NAME" > "${APP_NAME}/Contents/Info.plist"
           
-          # Zip the .app bundle
           ARCH=$(echo "${{ matrix.name }}" | sed 's/sansursuz-macos-//')
           zip -r "sansursuz-macos-${ARCH}.zip" "${APP_NAME}"
 
