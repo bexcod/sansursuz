@@ -20,7 +20,7 @@ import (
 	"github.com/bexcod/sansursuz/internal/ui"
 )
 
-const version = "2.2.0"
+const version = "2.3.0"
 
 // App holds all runtime state.
 type App struct {
@@ -93,6 +93,12 @@ func main() {
 			app.matcher.RemoveDomain(domain)
 			app.matcher.SaveLearned()
 			log.Printf("[Sansürsüz] Domain kaldırıldı: %s", domain)
+		},
+		OnQuit: func() {
+			log.Println("[Sansürsüz] Web UI'dan kapatma isteği alındı")
+			app.stopProxy()
+			cancel()
+			os.Exit(0)
 		},
 	})
 

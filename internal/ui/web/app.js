@@ -74,22 +74,13 @@ function setMode(mode) {
     updateSetting('mode', mode);
 }
 
-// Collapsible domains section
 function toggleDomains() {
     domainsExpanded = !domainsExpanded;
-    const section = document.getElementById('domainsSection');
     const content = document.getElementById('domainsContent');
     const arrow = document.getElementById('expandArrow');
 
-    if (domainsExpanded) {
-        section.classList.add('expanded');
-        content.classList.add('expanded');
-        arrow.classList.add('expanded');
-    } else {
-        section.classList.remove('expanded');
-        content.classList.remove('expanded');
-        arrow.classList.remove('expanded');
-    }
+    content.classList.toggle('expanded', domainsExpanded);
+    arrow.classList.toggle('expanded', domainsExpanded);
 }
 
 async function addDomain() {
@@ -141,6 +132,16 @@ function renderDomains() {
     ).join('');
 }
 
+async function quitApp() {
+    if (!confirm('Sansürsüz uygulamasını kapatmak istediğinize emin misiniz?')) return;
+    try {
+        await fetch(`${API}/api/quit`, { method: 'POST' });
+    } catch (e) {
+        // Expected — server shuts down
+    }
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#888;font-family:Inter,sans-serif"><p>Uygulama kapatıldı. Bu sekmeyi kapatabilirsiniz.</p></div>';
+}
+
 function updateUI() {
     const powerBtn = document.getElementById('powerBtn');
     const statusDot = document.getElementById('statusDot');
@@ -158,10 +159,8 @@ function updateUI() {
     }
 
     document.getElementById('dnsSelect').value = state.dns;
-
     document.getElementById('modeSelective').classList.toggle('active', state.mode === 'selective');
     document.getElementById('modeAll').classList.toggle('active', state.mode === 'all');
-
     document.getElementById('portInput').value = state.port;
 
     if (state.active) {

@@ -36,6 +36,7 @@ type Callbacks struct {
 	GetDomains       func() []string               // Get custom domain list
 	AddDomain        func(domain string)           // Add a custom domain
 	RemoveDomain     func(domain string)           // Remove a custom domain
+	OnQuit           func()                        // Quit the application
 }
 
 // WebUI serves the embedded web interface and REST API.
@@ -70,6 +71,7 @@ func (w *WebUI) Start(ctx context.Context) error {
 	mux.HandleFunc("/api/toggle", w.handleToggle)
 	mux.HandleFunc("/api/settings", w.handleSettings)
 	mux.HandleFunc("/api/domains", w.handleDomains)
+	mux.HandleFunc("/api/quit", w.handleQuit)
 
 	addr := fmt.Sprintf("127.0.0.1:%d", w.port)
 	w.server = &http.Server{
@@ -210,4 +212,21 @@ func (w *WebUI) handleDomains(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(rw, "method not allowed", http.StatusMethodNotAllowed)
+}
+
+// POST /api/quit
+func (w *WebUI) handleQuit(rw http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(rw, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	rw.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(rw).Encode(map[string]string{"status": "ok"})
+
+	// Trigger quit after response is sent
+	go func() {
+		if w.callbacks.OnQuit != nil {
+			w.callbacks.OnQuit()
+		}
+	}()
 }

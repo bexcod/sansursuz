@@ -16,7 +16,7 @@
                 <span class="logo-icon">🔓</span>
                 <h1>Sansürsüz</h1>
             </div>
-            <span class="version" id="version">v2.2.0</span>
+            <span class="version" id="version">v2.3.0</span>
         </header>
 
         <div class="power-section">
@@ -74,18 +74,18 @@
             <span id="infoText">Proxy: 127.0.0.1:8443</span>
         </div>
 
-        <!-- Collapsible Domains Section -->
+        <!-- Minimal expand arrow for domains -->
         <div class="domains-section" id="domainsSection">
-            <div class="domains-toggle" onclick="toggleDomains()">
-                <div class="domains-toggle-left">
-                    <span class="expand-arrow" id="expandArrow">▶</span>
-                    <span>Özel Domainler</span>
-                    <span class="info-icon"
-                        title="Zorunlu değildir. Otomatik sistem algılamadığı ya da kendiniz eklemek istediğiniz adresleri buraya girebilirsiniz.">ℹ️</span>
-                </div>
-                <span class="domain-count" id="domainCount">0</span>
+            <div class="domains-arrow" onclick="toggleDomains()" title="Özel domain ekle">
+                <span class="expand-arrow" id="expandArrow">▼</span>
             </div>
             <div class="domains-content" id="domainsContent">
+                <div class="domains-header-row">
+                    <span class="domains-title">Özel Domainler</span>
+                    <span class="info-icon"
+                        title="İsteğe bağlı — otomatik algılanmayan siteleri buraya ekleyebilirsiniz.">ℹ️</span>
+                    <span class="domain-count" id="domainCount">0</span>
+                </div>
                 <div class="domain-add">
                     <input type="text" id="domainInput" class="domain-input" placeholder="örn: discord.com"
                         onkeydown="if(event.key==='Enter') addDomain()">
@@ -94,6 +94,9 @@
                 <div class="domain-list" id="domainList"></div>
             </div>
         </div>
+
+        <!-- Quit button -->
+        <button class="quit-btn" onclick="quitApp()" title="Uygulamayı kapat">Uygulamayı Kapat</button>
     </div>
 
     <script src="app.js"></script>

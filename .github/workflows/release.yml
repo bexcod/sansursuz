@@ -59,16 +59,11 @@ jobs:
             cp assets/icon.icns "${APP_NAME}/Contents/Resources/AppIcon.icns"
           fi
           
-          # Create Info.plist (NO LSUIElement — app shows in dock for easy quit)
-          printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n<key>CFBundleExecutable</key>\n<string>sansursuz</string>\n<key>CFBundleIdentifier</key>\n<string>com.bexcod.sansursuz</string>\n<key>CFBundleName</key>\n<string>Sansursuz</string>\n<key>CFBundleDisplayName</key>\n<string>Sansursuz</string>\n<key>CFBundleVersion</key>\n<string>%s</string>\n<key>CFBundleShortVersionString</key>\n<string>%s</string>\n<key>CFBundlePackageType</key>\n<string>APPL</string>\n<key>CFBundleIconFile</key>\n<string>AppIcon</string>\n<key>LSMinimumSystemVersion</key>\n<string>11.0</string>\n<key>NSHighResolutionCapable</key>\n<true/>\n</dict>\n</plist>\n' "$TAG_NAME" "$TAG_NAME" > "${APP_NAME}/Contents/Info.plist"
+          # Create Info.plist — LSUIElement=true to prevent dock bouncing
+          printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n<key>CFBundleExecutable</key>\n<string>sansursuz</string>\n<key>CFBundleIdentifier</key>\n<string>com.bexcod.sansursuz</string>\n<key>CFBundleName</key>\n<string>Sansursuz</string>\n<key>CFBundleDisplayName</key>\n<string>Sansursuz</string>\n<key>CFBundleVersion</key>\n<string>%s</string>\n<key>CFBundleShortVersionString</key>\n<string>%s</string>\n<key>CFBundlePackageType</key>\n<string>APPL</string>\n<key>CFBundleIconFile</key>\n<string>AppIcon</string>\n<key>LSMinimumSystemVersion</key>\n<string>11.0</string>\n<key>LSUIElement</key>\n<true/>\n<key>NSHighResolutionCapable</key>\n<true/>\n</dict>\n</plist>\n' "$TAG_NAME" "$TAG_NAME" > "${APP_NAME}/Contents/Info.plist"
           
-          # Copy installer script
-          cp assets/Kur.command .
-          chmod +x Kur.command
-          
-          # Zip .app + installer together
           ARCH=$(echo "${{ matrix.name }}" | sed 's/sansursuz-macos-//')
-          zip -r "sansursuz-macos-${ARCH}.zip" "${APP_NAME}" Kur.command
+          zip -r "sansursuz-macos-${ARCH}.zip" "${APP_NAME}"
 
       - name: Upload artifact (macOS)
         if: matrix.goos == 'darwin'
@@ -101,18 +96,24 @@ jobs:
           body: |
             ## Sansürsüz ${{ github.ref_name }}
 
-            ### 📥 macOS Kurulum
-            1. `.zip` dosyasını indirin
-            2. Zip'i açın → **Kur.command**'a çift tıklayın
-            3. Otomatik olarak kurulur ve başlatılır!
+            ### 📥 İndirme ve Kurulum
 
-            | Platform | Dosya |
-            |---|---|
-            | macOS (M1/M2) | `sansursuz-macos-arm64.zip` |
-            | macOS (Intel) | `sansursuz-macos-amd64.zip` |
-            | Windows | `sansursuz-windows-amd64.exe` |
-            | Linux | `sansursuz-linux-amd64` |
+            | Platform | Dosya | Kurulum |
+            |---|---|---|
+            | macOS (M1/M2) | `sansursuz-macos-arm64.zip` | Aşağıdaki adımları takip edin |
+            | macOS (Intel) | `sansursuz-macos-amd64.zip` | Aşağıdaki adımları takip edin |
+            | Windows | `sansursuz-windows-amd64.exe` | İndirin → Çift tıklayın |
+            | Linux | `sansursuz-linux-amd64` | `chmod +x` yapıp çalıştırın |
+
+            ### 🍎 macOS Kurulum
+            1. Zip'i indirin ve açın
+            2. `Sansursuz.app`'i **Applications** klasörüne sürükleyin
+            3. Terminal'de şu komutu çalıştırın (sadece ilk seferinde):
+            ```
+            xattr -cr /Applications/Sansursuz.app
+            ```
+            4. Uygulamaya çift tıklayın — tarayıcıda kontrol paneli açılacak!
 
             ### 🚀 Kullanım
-            Uygulama başladığında tarayıcıda kontrol paneli otomatik açılır.
-            Kapatmak için Dock'taki uygulama ikonuna sağ tıklayın → Çıkış.
+            - Kontrol paneli tarayıcıda otomatik açılır
+            - Kapatmak için paneldeki **Uygulamayı Kapat** butonuna tıklayın
