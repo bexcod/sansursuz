@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sansürsüz</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🔓</span>
+                <h1>Sansürsüz</h1>
+            </div>
+            <span class="version" id="version">v2.0.0</span>
+        </header>
+
+        <div class="power-section">
+            <button class="power-btn" id="powerBtn" onclick="togglePower()">
+                <svg viewBox="0 0 64 64" class="power-icon">
+                    <circle cx="32" cy="32" r="28" fill="none" stroke-width="3" class="power-ring" />
+                    <line x1="32" y1="8" x2="32" y2="28" stroke-width="3" stroke-linecap="round" class="power-line" />
+                </svg>
+            </button>
+            <div class="status" id="status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Bağlanıyor...</span>
+            </div>
+        </div>
+
+        <div class="settings">
+            <div class="setting-card">
+                <div class="setting-label">
+                    <span class="setting-icon">🌐</span>
+                    <span>DNS Sağlayıcı</span>
+                </div>
+                <select id="dnsSelect" onchange="updateSetting('dns', this.value)">
+                    <option value="cloudflare">Cloudflare</option>
+                    <option value="google">Google</option>
+                    <option value="quad9">Quad9</option>
+                    <option value="adguard">AdGuard</option>
+                    <option value="yandex">Yandex</option>
+                </select>
+            </div>
+
+            <div class="setting-card">
+                <div class="setting-label">
+                    <span class="setting-icon">🔒</span>
+                    <span>Şifreleme</span>
+                </div>
+                <div class="toggle-group">
+                    <button class="toggle-opt active" id="modeSelective" onclick="setMode('selective')"
+                        title="Sadece engelli sitelere uygula">Akıllı</button>
+                    <button class="toggle-opt" id="modeAll" onclick="setMode('all')"
+                        title="Tüm sitelere uygula">Tümü</button>
+                </div>
+            </div>
+
+            <div class="setting-card">
+                <div class="setting-label">
+                    <span class="setting-icon">🔌</span>
+                    <span>Port</span>
+                </div>
+                <input type="number" id="portInput" class="port-input" min="1024" max="65535" value="8443"
+                    onchange="updateSetting('port', this.value)" title="Proxy port numarası (varsayılan: 8443)">
+            </div>
+
+        </div>
+
+        <div class="info-bar" id="infoBar">
+            <span id="infoText">Proxy: 127.0.0.1:8443</span>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

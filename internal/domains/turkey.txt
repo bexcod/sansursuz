@@ -1,0 +1,10 @@
+# Sansürsüz — Engelli domain listesi
+# 
+# Türkiye'deki engellemeler DNS seviyesinde olduğundan,
+# DoH resolver zaten bu engelleri aşıyor.
+# 
+# Bu liste SNI/DPI seviyesinde engellenen domainler için.
+# Otomatik tespit edilen domainler ~/.alcatraz/learned.txt'e kaydedilir.
+#
+# Manuel eklemek için buraya veya config.yaml'daki domains.extra'ya yazın.
+

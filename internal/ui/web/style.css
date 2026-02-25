@@ -1,0 +1,317 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #0f1123;
+    --bg-secondary: #1a1b2e;
+    --bg-card: #222340;
+    --bg-card-hover: #2a2b4a;
+    --text-primary: #e8e8f0;
+    --text-secondary: #8888a8;
+    --accent-green: #4ade80;
+    --accent-green-glow: rgba(74, 222, 128, 0.3);
+    --accent-red: #f87171;
+    --accent-red-glow: rgba(248, 113, 113, 0.3);
+    --accent-blue: #60a5fa;
+    --border: rgba(255, 255, 255, 0.06);
+    --radius: 12px;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.app {
+    width: 380px;
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    padding: 28px;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    font-size: 24px;
+}
+
+.logo h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.version {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+/* Power Button */
+.power-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.power-btn {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-card);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s ease;
+    position: relative;
+}
+
+.power-btn::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: transparent;
+    transition: all 0.4s ease;
+}
+
+.power-btn:hover {
+    transform: scale(1.05);
+}
+
+.power-btn:active {
+    transform: scale(0.95);
+}
+
+.power-btn.active {
+    background: rgba(74, 222, 128, 0.1);
+    box-shadow: 0 0 40px var(--accent-green-glow), 0 0 80px rgba(74, 222, 128, 0.1);
+}
+
+.power-btn.active::before {
+    background: conic-gradient(var(--accent-green), transparent, var(--accent-green));
+    animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.power-icon {
+    width: 48px;
+    height: 48px;
+    position: relative;
+    z-index: 1;
+}
+
+.power-ring {
+    stroke: var(--text-secondary);
+    transition: stroke 0.4s ease;
+}
+
+.power-line {
+    stroke: var(--text-secondary);
+    transition: stroke 0.4s ease;
+}
+
+.power-btn.active .power-ring {
+    stroke: var(--accent-green);
+}
+
+.power-btn.active .power-line {
+    stroke: var(--accent-green);
+}
+
+/* Status */
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.status-dot.active {
+    background: var(--accent-green);
+    box-shadow: 0 0 8px var(--accent-green-glow);
+}
+
+.status-dot.inactive {
+    background: var(--accent-red);
+}
+
+/* Settings */
+.settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.setting-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    transition: background 0.2s ease;
+}
+
+.setting-card:hover {
+    background: var(--bg-card-hover);
+}
+
+.setting-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.setting-icon {
+    font-size: 16px;
+}
+
+/* Select */
+select {
+    appearance: none;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 28px 6px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238888a8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    transition: border-color 0.2s;
+}
+
+select:hover {
+    border-color: var(--accent-blue);
+}
+
+/* Toggle Group */
+.toggle-group {
+    display: flex;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.toggle-opt {
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.toggle-opt.active {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.toggle-opt:hover:not(.active) {
+    color: var(--text-primary);
+}
+
+/* Info Bar */
+.info-bar {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+/* Port Input */
+.port-input {
+    width: 80px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.port-input::-webkit-outer-spin-button,
+.port-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.port-input:hover,
+.port-input:focus {
+    border-color: var(--accent-blue);
+}

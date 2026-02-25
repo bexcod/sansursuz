@@ -1,0 +1,22 @@
+# Binary çıktılar
+/sansursuz
+/sansursuz.exe
+/alcatraz
+/alcatraz.exe
+dist/
+
+# Go
+*.test
+*.out
+
+# macOS
+.DS_Store
+*.app
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Config (kullanıcıya özel)
+config.yaml
