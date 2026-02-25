@@ -1,0 +1,23 @@
+# Binaries
+sansursuz
+sansursuz.exe
+*.exe
+*.app
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Go
+vendor/
+
+# Build artifacts
+*.iconset/
+*.svg.png
