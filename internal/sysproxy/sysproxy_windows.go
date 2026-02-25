@@ -9,9 +9,21 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"syscall"
+	"unsafe"
 )
 
-// Set configures the system proxy to use Alcatraz on Windows.
+var (
+	wininet                    = syscall.NewLazyDLL("wininet.dll")
+	procInternetSetOptionW     = wininet.NewProc("InternetSetOptionW")
+)
+
+const (
+	internetOptionSettingsChanged = 39
+	internetOptionRefresh         = 37
+)
+
+// Set configures the system proxy to use Sansürsüz on Windows.
 func Set(port int) error {
 	proxyAddr := fmt.Sprintf("127.0.0.1:%d", port)
 
@@ -23,8 +35,8 @@ func Set(port int) error {
 		return fmt.Errorf("failed to set proxy address: %w", err)
 	}
 
-	// Notify the system of the change
-	exec.Command("cmd", "/c", "RUNDLL32.EXE", "inetcpl.cpl,LaunchConnectionDialog").Run()
+	// Notify the system of proxy change silently (no dialog!)
+	notifyProxyChange()
 
 	log.Printf("[Sansürsüz] System proxy set to %s", proxyAddr)
 	return nil
@@ -35,11 +47,19 @@ func Unset() error {
 	if err := regSet(`HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings`, "ProxyEnable", "0"); err != nil {
 		return fmt.Errorf("failed to disable proxy: %w", err)
 	}
+	notifyProxyChange()
 	log.Printf("[Sansürsüz] System proxy removed")
 	return nil
 }
 
-// IsSet checks if the system proxy is currently configured to Alcatraz on Windows.
+// notifyProxyChange tells Windows to pick up the registry changes without opening any UI.
+func notifyProxyChange() {
+	procInternetSetOptionW.Call(0, internetOptionSettingsChanged, 0, 0)
+	procInternetSetOptionW.Call(0, internetOptionRefresh, 0, 0)
+	_ = unsafe.Pointer(nil) // keep unsafe import
+}
+
+// IsSet checks if the system proxy is currently configured on Windows.
 func IsSet(port int) bool {
 	out, err := exec.Command("reg", "query",
 		`HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings`,
