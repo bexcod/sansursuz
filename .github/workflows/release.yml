@@ -42,7 +42,60 @@ jobs:
         run: |
           go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/sansursuz/
 
-      - name: Upload artifact
+      - name: Create macOS .app bundle
+        if: matrix.goos == 'darwin'
+        run: |
+          APP_NAME="Sansürsüz.app"
+          mkdir -p "${APP_NAME}/Contents/MacOS"
+          mkdir -p "${APP_NAME}/Contents/Resources"
+          
+          # Move binary into .app
+          mv ${{ matrix.name }} "${APP_NAME}/Contents/MacOS/sansursuz"
+          chmod +x "${APP_NAME}/Contents/MacOS/sansursuz"
+          
+          # Create Info.plist
+          cat > "${APP_NAME}/Contents/Info.plist" << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>sansursuz</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.bexcod.sansursuz</string>
+            <key>CFBundleName</key>
+            <string>Sansürsüz</string>
+            <key>CFBundleDisplayName</key>
+            <string>Sansürsüz</string>
+            <key>CFBundleVersion</key>
+            <string>${{ github.ref_name }}</string>
+            <key>CFBundleShortVersionString</key>
+            <string>${{ github.ref_name }}</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>11.0</string>
+            <key>LSUIElement</key>
+            <true/>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+          </dict>
+          </plist>
+          PLIST
+          
+          # Zip the .app bundle
+          ARCH=$(echo "${{ matrix.name }}" | sed 's/sansursuz-macos-//')
+          zip -r "sansursuz-macos-${ARCH}.zip" "${APP_NAME}"
+
+      - name: Upload artifact (macOS)
+        if: matrix.goos == 'darwin'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: "*.zip"
+
+      - name: Upload artifact (other)
+        if: matrix.goos != 'darwin'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
@@ -66,11 +119,15 @@ jobs:
             ## Sansürsüz ${{ github.ref_name }}
 
             ### 📥 İndirme
-            | Platform | Dosya |
-            |---|---|
-            | macOS (M1/M2) | `sansursuz-macos-arm64` |
-            | macOS (Intel) | `sansursuz-macos-amd64` |
-            | Windows | `sansursuz-windows-amd64.exe` |
-            | Linux | `sansursuz-linux-amd64` |
+            | Platform | Dosya | Kurulum |
+            |---|---|---|
+            | macOS (M1/M2) | `sansursuz-macos-arm64.zip` | Zip'i açın → Sansürsüz.app'i Applications'a sürükleyin |
+            | macOS (Intel) | `sansursuz-macos-amd64.zip` | Zip'i açın → Sansürsüz.app'i Applications'a sürükleyin |
+            | Windows | `sansursuz-windows-amd64.exe` | İndirin → Çift tıklayın |
+            | Linux | `sansursuz-linux-amd64` | İndirin → `chmod +x` → Çalıştırın |
 
-            **Kullanım:** İndirin → Çalıştırın → Tarayıcıda `http://127.0.0.1:8444` açın
+            ### ⚠️ macOS İlk Çalıştırma
+            İlk açılışta Gatekeeper uyarısı alırsanız: **Sağ tıklayın → Aç** seçin.
+
+            ### 🚀 Kullanım
+            Uygulama başladığında tarayıcıda kontrol paneli otomatik açılır.

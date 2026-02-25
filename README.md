@@ -15,12 +15,12 @@ Türkiye'deki internet sansürünü aşmak için tasarlanmış, kullanımı kola
 
 [**Releases**](../../releases/latest) sayfasından platformunuza uygun dosyayı indirin:
 
-| Platform | Dosya |
-|---|---|
-| macOS (M1/M2) | `sansursuz-macos-arm64` |
-| macOS (Intel) | `sansursuz-macos-amd64` |
-| Windows | `sansursuz-windows-amd64.exe` |
-| Linux | `sansursuz-linux-amd64` |
+| Platform | Dosya | Kurulum |
+|---|---|---|
+| macOS (M1/M2) | `sansursuz-macos-arm64.zip` | Zip'i açın → **Sansürsüz.app**'i Applications'a sürükleyin |
+| macOS (Intel) | `sansursuz-macos-amd64.zip` | Zip'i açın → **Sansürsüz.app**'i Applications'a sürükleyin |
+| Windows | `sansursuz-windows-amd64.exe` | İndirip çift tıklayın |
+| Linux | `sansursuz-linux-amd64` | `chmod +x` yapıp çalıştırın |
 
 ## 🚀 Kullanım
 
