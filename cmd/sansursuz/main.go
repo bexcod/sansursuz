@@ -20,7 +20,7 @@ import (
 	"github.com/bexcod/sansursuz/internal/ui"
 )
 
-const version = "2.1.0"
+const version = "2.2.0"
 
 // App holds all runtime state.
 type App struct {

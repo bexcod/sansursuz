@@ -279,22 +279,87 @@ select:hover {
     color: var(--text-primary);
 }
 
-/* Domains Section */
+/* Domains Section (Collapsible) */
 .domains-section {
-    margin-bottom: 16px;
+    margin-top: 12px;
+}
+
+.domains-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    user-select: none;
 }
 
-.domains-header {
+.domains-toggle:hover {
+    background: var(--bg-card-hover);
+}
+
+.domains-toggle-left {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 14px;
+    gap: 8px;
+    font-size: 13px;
     font-weight: 500;
-    margin-bottom: 10px;
+    color: var(--text-secondary);
+}
+
+.expand-arrow {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.expand-arrow.expanded {
+    transform: rotate(90deg);
+}
+
+.info-icon {
+    font-size: 14px;
+    cursor: help;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.info-icon:hover {
+    opacity: 1;
+}
+
+.domain-count {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    padding: 2px 8px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.domains-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    background: var(--bg-card);
+    border: 1px solid transparent;
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    padding: 0 14px;
+}
+
+.domains-content.expanded {
+    max-height: 250px;
+    padding: 12px 14px;
+    border-color: var(--border);
+}
+
+.domains-section.expanded .domains-toggle {
+    border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .domain-add {
@@ -343,7 +408,7 @@ select:hover {
 }
 
 .domain-list {
-    max-height: 120px;
+    max-height: 100px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;

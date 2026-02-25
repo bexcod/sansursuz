@@ -10,6 +10,8 @@ let state = {
     domains: []
 };
 
+let domainsExpanded = false;
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchStatus();
     fetchDomains();
@@ -72,6 +74,24 @@ function setMode(mode) {
     updateSetting('mode', mode);
 }
 
+// Collapsible domains section
+function toggleDomains() {
+    domainsExpanded = !domainsExpanded;
+    const section = document.getElementById('domainsSection');
+    const content = document.getElementById('domainsContent');
+    const arrow = document.getElementById('expandArrow');
+
+    if (domainsExpanded) {
+        section.classList.add('expanded');
+        content.classList.add('expanded');
+        arrow.classList.add('expanded');
+    } else {
+        section.classList.remove('expanded');
+        content.classList.remove('expanded');
+        arrow.classList.remove('expanded');
+    }
+}
+
 async function addDomain() {
     const input = document.getElementById('domainInput');
     const domain = input.value.trim().toLowerCase();
@@ -105,7 +125,11 @@ async function removeDomain(domain) {
 
 function renderDomains() {
     const list = document.getElementById('domainList');
-    if (!state.domains || state.domains.length === 0) {
+    const count = document.getElementById('domainCount');
+    const domainCount = state.domains ? state.domains.length : 0;
+    count.textContent = domainCount;
+
+    if (!state.domains || domainCount === 0) {
         list.innerHTML = '';
         return;
     }

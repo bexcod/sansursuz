@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1b3a"/>
+      <stop offset="100%" style="stop-color:#0f1123"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80"/>
+      <stop offset="100%" style="stop-color:#22c55e"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <!-- Shield -->
+  <path d="M512 180 C512 180 280 260 280 260 L280 520 C280 700 512 844 512 844 C512 844 744 700 744 520 L744 260 Z" fill="url(#shield)" opacity="0.2" stroke="url(#shield)" stroke-width="8"/>
+  <!-- Unlocked padlock body -->
+  <rect x="420" y="470" width="184" height="150" rx="20" fill="none" stroke="url(#glow)" stroke-width="14"/>
+  <!-- Unlocked shackle (open) -->
+  <path d="M470 470 L470 400 C470 350 512 320 554 320 C596 320 604 350 604 400 L604 420" fill="none" stroke="url(#glow)" stroke-width="14" stroke-linecap="round"/>
+  <!-- Keyhole -->
+  <circle cx="512" cy="535" r="18" fill="url(#glow)"/>
+  <rect x="506" y="545" width="12" height="30" rx="4" fill="url(#glow)"/>
+</svg>
