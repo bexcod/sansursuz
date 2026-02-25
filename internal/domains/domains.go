@@ -5,11 +5,14 @@ import (
 	"bufio"
 	"embed"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 )
 
 //go:embed turkey.txt
@@ -206,4 +209,50 @@ func (m *Matcher) String() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return fmt.Sprintf("%d domain (%d öğrenilen)", len(m.domains), len(m.learned))
+}
+
+// UpdateFromRemote fetches the latest domain list from GitHub.
+func (m *Matcher) UpdateFromRemote() {
+	const url = "https://raw.githubusercontent.com/bexcod/sansursuz/main/internal/domains/turkey.txt"
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		log.Printf("[Sansürsüz] Domain güncelleme başarısız: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("[Sansürsüz] Domain güncelleme başarısız: HTTP %d", resp.StatusCode)
+		return
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("[Sansürsüz] Domain listesi okunamadı: %v", err)
+		return
+	}
+
+	added := 0
+	scanner := bufio.NewScanner(strings.NewReader(string(body)))
+	m.mu.Lock()
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		d := strings.ToLower(line)
+		if _, exists := m.domains[d]; !exists {
+			m.domains[d] = struct{}{}
+			added++
+		}
+	}
+	m.mu.Unlock()
+
+	if added > 0 {
+		log.Printf("[Sansürsüz] 🔄 %d yeni domain güncellendi", added)
+	} else {
+		log.Println("[Sansürsüz] ✅ Domain listesi güncel")
+	}
 }

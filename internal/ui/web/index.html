@@ -16,7 +16,7 @@
                 <span class="logo-icon">🔓</span>
                 <h1>Sansürsüz</h1>
             </div>
-            <span class="version" id="version">v2.3.0</span>
+            <span class="version" id="version">v3.0.0</span>
         </header>
 
         <div class="power-section">
@@ -49,8 +49,22 @@
 
             <div class="setting-card">
                 <div class="setting-label">
+                    <span class="setting-icon">📡</span>
+                    <span>Mod</span>
+                </div>
+                <select id="fragSelect" onchange="updateSetting('fragmode', this.value)">
+                    <option value="auto">🤖 Otomatik</option>
+                    <option value="standard">📡 Standart</option>
+                    <option value="advanced">⚡ Gelişmiş</option>
+                    <option value="aggressive">🔥 Agresif</option>
+                    <option value="maximum">💪 Maksimum</option>
+                </select>
+            </div>
+
+            <div class="setting-card">
+                <div class="setting-label">
                     <span class="setting-icon">🔒</span>
-                    <span>Şifreleme</span>
+                    <span>Kapsam</span>
                 </div>
                 <div class="toggle-group">
                     <button class="toggle-opt active" id="modeSelective" onclick="setMode('selective')"
@@ -73,6 +87,14 @@
         <div class="info-bar" id="infoBar">
             <span id="infoText">Proxy: 127.0.0.1:8443</span>
         </div>
+
+        <!-- Connection status indicator -->
+        <div class="conn-status" id="connStatus"></div>
+
+        <!-- Diagnostics button -->
+        <button class="diag-btn" id="diagBtn" onclick="runDiagnose()">
+            <span id="diagIcon">🔍</span> Bağlantı Testi
+        </button>
 
         <!-- Minimal expand arrow for domains -->
         <div class="domains-section" id="domainsSection">

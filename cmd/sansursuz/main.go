@@ -20,7 +20,7 @@ import (
 	"github.com/bexcod/sansursuz/internal/ui"
 )
 
-const version = "2.3.0"
+const version = "3.0.0"
 
 // App holds all runtime state.
 type App struct {
@@ -33,6 +33,7 @@ type App struct {
 	proxyCtx    context.Context
 	proxyCancel context.CancelFunc
 	active      bool
+	fragMode    proxy.FragmentMode
 }
 
 func main() {
@@ -59,11 +60,30 @@ func main() {
 		cfg.DNS.Provider = *dnsProvider
 	}
 
-	app := &App{cfg: cfg}
+	app := &App{
+		cfg:      cfg,
+		fragMode: proxy.FragmentModeAuto,
+	}
 	app.initComponents()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+
+	// Crash-safe: ensure proxy is cleaned up on ANY exit
+	defer func() {
+		sysproxy.Unset()
+		cancel()
+	}()
+
+	// Signal handler for crash-safe cleanup
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	go func() {
+		<-sigCh
+		log.Println("[Sansürsüz] Sinyal alındı, kapatılıyor...")
+		app.stopProxy()
+		cancel()
+		os.Exit(0)
+	}()
 
 	log.Printf("[Sansürsüz] v%s başlatılıyor...", version)
 	log.Printf("[Sansürsüz] DNS: %s | Mod: %s | Port: %d",
@@ -72,8 +92,23 @@ func main() {
 	// DNS Prefetch
 	go app.resolver.Prefetch(app.matcher.AllDomains())
 
+	// Auto-detect best fragmentation strategy in background
+	go func() {
+		detected := proxy.AutoDetectStrategy(app.resolver)
+		app.mu.Lock()
+		app.fragMode = detected
+		app.mu.Unlock()
+
+		fc := proxy.ConfigForMode(detected)
+		app.proxyServer.SetFragConfig(fc)
+		log.Printf("[Sansürsüz] Fragmentasyon modu: %s", detected)
+	}()
+
 	// Start proxy immediately
 	app.startProxy(ctx)
+
+	// Domain list auto-update (every 24 hours)
+	go app.domainAutoUpdate()
 
 	// Start web UI
 	webUIPort := cfg.Proxy.Port + 1 // 8444 by default
@@ -99,6 +134,10 @@ func main() {
 			app.stopProxy()
 			cancel()
 			os.Exit(0)
+		},
+		OnDiagnose: func() []proxy.DiagnoseResult {
+			testDomains := []string{"discord.com", "twitter.com", "youtube.com", "wikipedia.org"}
+			return proxy.DiagnoseConnection(app.resolver, testDomains)
 		},
 	})
 
@@ -206,7 +245,6 @@ func (a *App) changeSetting(key, value string) error {
 			return fmt.Errorf("geçersiz mod: %s", value)
 		}
 		a.cfg.Proxy.Mode = value
-		// Need to restart proxy with new mode
 		wasActive := a.active
 		if wasActive {
 			a.stopProxy()
@@ -245,6 +283,36 @@ func (a *App) changeSetting(key, value string) error {
 		}
 		log.Printf("[Sansürsüz] Port değiştirildi: %d", newPort)
 
+	case "fragmode":
+		mode := proxy.FragmentMode(value)
+		switch mode {
+		case proxy.FragmentModeAuto, proxy.FragmentModeStandard,
+			proxy.FragmentModeAdvanced, proxy.FragmentModeAggressive,
+			proxy.FragmentModeMaximum:
+		default:
+			return fmt.Errorf("geçersiz fragmentasyon modu: %s", value)
+		}
+
+		a.mu.Lock()
+		a.fragMode = mode
+		a.mu.Unlock()
+
+		if mode == proxy.FragmentModeAuto {
+			go func() {
+				detected := proxy.AutoDetectStrategy(a.resolver)
+				fc := proxy.ConfigForMode(detected)
+				a.proxyServer.SetFragConfig(fc)
+				a.mu.Lock()
+				a.fragMode = detected
+				a.mu.Unlock()
+				log.Printf("[Sansürsüz] Otomatik mod: %s seçildi", detected)
+			}()
+		} else {
+			fc := proxy.ConfigForMode(mode)
+			a.proxyServer.SetFragConfig(fc)
+		}
+		log.Printf("[Sansürsüz] Fragmentasyon modu: %s", mode)
+
 	default:
 		return fmt.Errorf("bilinmeyen ayar: %s", key)
 	}
@@ -255,11 +323,24 @@ func (a *App) getState() ui.AppState {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return ui.AppState{
-		Active:  a.active,
-		DNS:     a.cfg.DNS.Provider,
-		Mode:    a.cfg.Proxy.Mode,
-		Port:    a.cfg.Proxy.Port,
-		Version: version,
+		Active:   a.active,
+		DNS:      a.cfg.DNS.Provider,
+		Mode:     a.cfg.Proxy.Mode,
+		Port:     a.cfg.Proxy.Port,
+		Version:  version,
+		FragMode: string(a.fragMode),
+	}
+}
+
+func (a *App) domainAutoUpdate() {
+	// Try to update domain list from GitHub on startup
+	a.matcher.UpdateFromRemote()
+
+	// Then every 24 hours
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+	for range ticker.C {
+		a.matcher.UpdateFromRemote()
 	}
 }
 
@@ -267,13 +348,9 @@ func (a *App) runHeadless(ctx context.Context, cancel context.CancelFunc) {
 	log.Printf("[Sansürsüz] Web UI: http://127.0.0.1:%d", a.cfg.Proxy.Port+1)
 	log.Println("[Sansürsüz] ✅ Çalışıyor! Durdurmak için Ctrl+C basın.")
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	<-sigCh
-
+	<-ctx.Done()
 	log.Println("[Sansürsüz] Kapatılıyor...")
 	a.stopProxy()
-	cancel()
 }
 
 func (a *App) runWithTray(ctx context.Context, cancel context.CancelFunc) {
@@ -287,31 +364,23 @@ func (a *App) runWithTray(ctx context.Context, cancel context.CancelFunc) {
 		a.webUI.OpenInBrowser()
 	}
 
-	go func() {
-		sigCh := make(chan os.Signal, 1)
-		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-		<-sigCh
-		a.stopProxy()
-		cancel()
-		os.Exit(0)
-	}()
-
 	tray := ui.NewTrayApp(onEnable, onDisable, onOpenUI)
 	tray.Run(ctx)
 }
 
 func createResolver(cfg *config.Config) *dns.Resolver {
+	// Always include multiple providers for fallback
 	switch cfg.DNS.Provider {
 	case "google":
-		return dns.NewResolver(dns.Google, dns.Cloudflare)
+		return dns.NewResolver(dns.Google, dns.Cloudflare, dns.Quad9)
 	case "quad9":
-		return dns.NewResolver(dns.Quad9, dns.Cloudflare)
+		return dns.NewResolver(dns.Quad9, dns.Cloudflare, dns.Google)
 	case "adguard":
-		return dns.NewResolver(dns.AdGuard, dns.Cloudflare)
+		return dns.NewResolver(dns.AdGuard, dns.Cloudflare, dns.Google)
 	case "yandex":
-		return dns.NewResolver(dns.Yandex, dns.Cloudflare)
+		return dns.NewResolver(dns.Yandex, dns.Cloudflare, dns.Google)
 	default:
-		return dns.NewResolver(dns.Cloudflare, dns.Google)
+		return dns.NewResolver(dns.Cloudflare, dns.Google, dns.Quad9)
 	}
 }
 

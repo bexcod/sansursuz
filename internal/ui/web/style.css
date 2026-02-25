@@ -512,3 +512,77 @@ select:hover {
     background: rgba(248, 113, 113, 0.08);
     border-color: var(--accent-red);
 }
+
+/* Diagnostics Button */
+.diag-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.diag-btn:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+
+.diag-btn:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+/* Connection Status */
+.conn-status {
+    margin-top: 8px;
+    font-size: 11px;
+}
+
+.diag-loading {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+.diag-error {
+    text-align: center;
+    color: var(--accent-red);
+    padding: 8px;
+}
+
+.diag-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 8px;
+    background: var(--bg-card);
+    border-radius: 6px;
+    margin-bottom: 3px;
+    animation: fadeIn 0.2s ease;
+    flex-wrap: wrap;
+}
+
+.diag-domain {
+    font-weight: 500;
+    color: var(--text-primary);
+    min-width: 90px;
+}
+
+.diag-detail {
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+.diag-latency {
+    color: var(--accent-blue);
+    font-size: 10px;
+    margin-left: auto;
+}

@@ -1,4 +1,4 @@
-// Package ui provides the web-based user interface for Alcatraz.
+// Package ui provides the web-based user interface for Sansürsüz.
 package ui
 
 import (
@@ -14,6 +14,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/bexcod/sansursuz/internal/proxy"
 )
 
 //go:embed web/*
@@ -21,11 +23,12 @@ var webFiles embed.FS
 
 // AppState represents the current application state exposed to the UI.
 type AppState struct {
-	Active  bool   `json:"active"`
-	DNS     string `json:"dns"`
-	Mode    string `json:"mode"`
-	Port    int    `json:"port"`
-	Version string `json:"version"`
+	Active   bool   `json:"active"`
+	DNS      string `json:"dns"`
+	Mode     string `json:"mode"`
+	Port     int    `json:"port"`
+	Version  string `json:"version"`
+	FragMode string `json:"fragMode"`
 }
 
 // Callbacks for the web UI to control the backend.
@@ -37,6 +40,7 @@ type Callbacks struct {
 	AddDomain        func(domain string)           // Add a custom domain
 	RemoveDomain     func(domain string)           // Remove a custom domain
 	OnQuit           func()                        // Quit the application
+	OnDiagnose       func() []proxy.DiagnoseResult // Run diagnostics
 }
 
 // WebUI serves the embedded web interface and REST API.
@@ -72,6 +76,7 @@ func (w *WebUI) Start(ctx context.Context) error {
 	mux.HandleFunc("/api/settings", w.handleSettings)
 	mux.HandleFunc("/api/domains", w.handleDomains)
 	mux.HandleFunc("/api/quit", w.handleQuit)
+	mux.HandleFunc("/api/diagnose", w.handleDiagnose)
 
 	addr := fmt.Sprintf("127.0.0.1:%d", w.port)
 	w.server = &http.Server{
@@ -229,4 +234,20 @@ func (w *WebUI) handleQuit(rw http.ResponseWriter, r *http.Request) {
 			w.callbacks.OnQuit()
 		}
 	}()
+}
+
+// GET /api/diagnose
+func (w *WebUI) handleDiagnose(rw http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(rw, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	if w.callbacks.OnDiagnose != nil {
+		results := w.callbacks.OnDiagnose()
+		json.NewEncoder(rw).Encode(map[string]interface{}{"results": results})
+	} else {
+		json.NewEncoder(rw).Encode(map[string]interface{}{"results": []interface{}{}})
+	}
 }

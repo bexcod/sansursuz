@@ -478,3 +478,206 @@ func (s *Server) Stats() string {
 		s.fragmentedConns.Load(), s.directConns.Load(),
 		s.detectedConns.Load())
 }
+
+// FragConfig returns the current fragmentation configuration.
+func (s *Server) FragConfig() FragmentConfig {
+	return s.fragConfig
+}
+
+// SetFragConfig updates the fragmentation configuration.
+func (s *Server) SetFragConfig(fc FragmentConfig) {
+	s.mu.Lock()
+	s.fragConfig = fc
+	s.mu.Unlock()
+}
+
+// AutoDetectStrategy tries each fragmentation mode against test domains.
+// Returns the first mode that successfully connects, or "standard" as fallback.
+func AutoDetectStrategy(resolver *dns.Resolver) FragmentMode {
+	testDomains := []string{"discord.com", "twitter.com"}
+	modes := AllFragmentModes()
+
+	for _, mode := range modes {
+		cfg := ConfigForMode(mode)
+		success := true
+
+		for _, domain := range testDomains {
+			if !testFragmentConnection(resolver, domain, cfg) {
+				success = false
+				break
+			}
+		}
+
+		if success {
+			log.Printf("[Sansürsüz] ✅ Otomatik mod tespiti: %s çalışıyor", mode)
+			return mode
+		}
+		log.Printf("[Sansürsüz] ❌ %s modu başarısız, sonraki deneniyor...", mode)
+	}
+
+	log.Println("[Sansürsüz] ⚠️ Hiçbir mod onaylanamadı, standart kullanılıyor")
+	return FragmentModeStandard
+}
+
+// testFragmentConnection tests if a specific fragmentation config can connect to a domain.
+func testFragmentConnection(resolver *dns.Resolver, domain string, cfg FragmentConfig) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	ips, err := resolver.Resolve(ctx, domain)
+	if err != nil || len(ips) == 0 {
+		return false
+	}
+
+	addr := net.JoinHostPort(ips[0].String(), "443")
+	conn, err := net.DialTimeout("tcp", addr, 3*time.Second)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+
+	// Build a minimal TLS ClientHello with the test domain
+	clientHello := buildTestClientHello(domain)
+	if clientHello == nil {
+		return false
+	}
+
+	sniOffset := findSNIOffset(clientHello, domain)
+	fragments := FragmentClientHello(clientHello, sniOffset, cfg)
+
+	if err := SendFragmented(conn, fragments); err != nil {
+		return false
+	}
+
+	// Read response with timeout
+	conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	buf := make([]byte, 5)
+	n, err := conn.Read(buf)
+	if err != nil || n < 5 {
+		return false
+	}
+
+	// Check if we got a TLS ServerHello (content type 0x16, version 0x03xx)
+	return buf[0] == 0x16 && buf[1] == 0x03
+}
+
+// buildTestClientHello creates a minimal TLS 1.2 ClientHello for testing.
+func buildTestClientHello(domain string) []byte {
+	domainBytes := []byte(domain)
+	domainLen := len(domainBytes)
+
+	// SNI extension
+	sniExt := []byte{
+		0x00, 0x00, // SNI extension type
+	}
+	sniListLen := domainLen + 5
+	sniExtLen := sniListLen + 2
+	sniExt = append(sniExt, byte(sniExtLen>>8), byte(sniExtLen))
+	sniExt = append(sniExt, byte(sniListLen>>8), byte(sniListLen))
+	sniExt = append(sniExt, 0x00) // Host name type
+	sniExt = append(sniExt, byte(domainLen>>8), byte(domainLen))
+	sniExt = append(sniExt, domainBytes...)
+
+	// Cipher suites (TLS_AES_128_GCM_SHA256, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256)
+	cipherSuites := []byte{
+		0x00, 0x04, // Length
+		0x13, 0x01, // TLS_AES_128_GCM_SHA256
+		0xc0, 0x2f, // TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	}
+
+	// Extensions length
+	extLen := len(sniExt)
+
+	// ClientHello body
+	body := []byte{0x03, 0x03} // TLS 1.2
+	// Random (32 bytes)
+	random := make([]byte, 32)
+	for i := range random {
+		random[i] = byte(i + 1)
+	}
+	body = append(body, random...)
+	body = append(body, 0x00) // Session ID length
+	body = append(body, cipherSuites...)
+	body = append(body, 0x01, 0x00) // Compression methods
+	body = append(body, byte(extLen>>8), byte(extLen))
+	body = append(body, sniExt...)
+
+	// Handshake header
+	handshake := []byte{0x01} // ClientHello
+	bodyLen := len(body)
+	handshake = append(handshake, byte(bodyLen>>16), byte(bodyLen>>8), byte(bodyLen))
+	handshake = append(handshake, body...)
+
+	// TLS record header
+	record := []byte{0x16, 0x03, 0x01} // Handshake, TLS 1.0
+	hsLen := len(handshake)
+	record = append(record, byte(hsLen>>8), byte(hsLen))
+	record = append(record, handshake...)
+
+	return record
+}
+
+// findSNIOffset finds the byte offset of the SNI domain in a ClientHello.
+func findSNIOffset(data []byte, domain string) int {
+	domainBytes := []byte(domain)
+	for i := 0; i <= len(data)-len(domainBytes); i++ {
+		match := true
+		for j := 0; j < len(domainBytes); j++ {
+			if data[i+j] != domainBytes[j] {
+				match = false
+				break
+			}
+		}
+		if match {
+			return i
+		}
+	}
+	return len(data) / 2
+}
+
+// DiagnoseResult holds the result of a connection test.
+type DiagnoseResult struct {
+	Domain  string `json:"domain"`
+	DNS     string `json:"dns"`
+	TLS     string `json:"tls"`
+	Latency string `json:"latency"`
+}
+
+// DiagnoseConnection runs diagnostic tests.
+func DiagnoseConnection(resolver *dns.Resolver, domains []string) []DiagnoseResult {
+	var results []DiagnoseResult
+
+	for _, domain := range domains {
+		result := DiagnoseResult{Domain: domain}
+		start := time.Now()
+
+		// Test DNS
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ips, err := resolver.Resolve(ctx, domain)
+		cancel()
+
+		if err != nil {
+			result.DNS = "❌ " + err.Error()
+			result.TLS = "⏭️ DNS başarısız"
+			results = append(results, result)
+			continue
+		}
+		result.DNS = fmt.Sprintf("✅ %s", ips[0].String())
+
+		// Test TLS connection
+		addr := net.JoinHostPort(ips[0].String(), "443")
+		conn, err := net.DialTimeout("tcp", addr, 3*time.Second)
+		if err != nil {
+			result.TLS = "❌ Bağlanamadı"
+			results = append(results, result)
+			continue
+		}
+		conn.Close()
+		result.TLS = "✅ Bağlantı başarılı"
+		result.Latency = fmt.Sprintf("%dms", time.Since(start).Milliseconds())
+
+		results = append(results, result)
+	}
+
+	return results
+}

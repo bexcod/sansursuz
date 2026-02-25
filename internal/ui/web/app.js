@@ -1,4 +1,4 @@
-// Sansürsüz Web UI — Frontend Logic
+// Sansürsüz Web UI — Frontend Logic v3.0
 
 const API = '';
 
@@ -7,6 +7,7 @@ let state = {
     dns: 'cloudflare',
     mode: 'selective',
     port: 8443,
+    fragMode: 'auto',
     domains: []
 };
 
@@ -132,13 +133,41 @@ function renderDomains() {
     ).join('');
 }
 
+async function runDiagnose() {
+    const btn = document.getElementById('diagBtn');
+    const icon = document.getElementById('diagIcon');
+    const statusEl = document.getElementById('connStatus');
+
+    btn.disabled = true;
+    icon.textContent = '⏳';
+    statusEl.innerHTML = '<div class="diag-loading">Test ediliyor...</div>';
+
+    try {
+        const res = await fetch(`${API}/api/diagnose`);
+        const data = await res.json();
+        const results = data.results || [];
+
+        statusEl.innerHTML = results.map(r =>
+            `<div class="diag-row">
+                <span class="diag-domain">${r.domain}</span>
+                <span class="diag-detail">${r.dns}</span>
+                <span class="diag-detail">${r.tls}</span>
+                ${r.latency ? `<span class="diag-latency">${r.latency}</span>` : ''}
+            </div>`
+        ).join('');
+    } catch (e) {
+        statusEl.innerHTML = '<div class="diag-error">❌ Test başarısız</div>';
+    }
+
+    btn.disabled = false;
+    icon.textContent = '🔍';
+}
+
 async function quitApp() {
     if (!confirm('Sansürsüz uygulamasını kapatmak istediğinize emin misiniz?')) return;
     try {
         await fetch(`${API}/api/quit`, { method: 'POST' });
-    } catch (e) {
-        // Expected — server shuts down
-    }
+    } catch (e) { /* Expected — server shuts down */ }
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#888;font-family:Inter,sans-serif"><p>Uygulama kapatıldı. Bu sekmeyi kapatabilirsiniz.</p></div>';
 }
 
@@ -163,8 +192,13 @@ function updateUI() {
     document.getElementById('modeAll').classList.toggle('active', state.mode === 'all');
     document.getElementById('portInput').value = state.port;
 
+    // Fragmentation mode
+    if (state.fragMode) {
+        document.getElementById('fragSelect').value = state.fragMode;
+    }
+
     if (state.active) {
-        infoText.textContent = `✅ Tüm sistem aktif — Port ${state.port}`;
+        infoText.textContent = `✅ Aktif — Port ${state.port}`;
     } else {
         infoText.textContent = `Proxy: 127.0.0.1:${state.port}`;
     }
