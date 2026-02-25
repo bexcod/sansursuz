@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// Set configures the system proxy to use Alcatraz.
+// Set configures the system proxy to use Sansürsüz.
 func Set(port int) error {
 	iface, err := getActiveInterface()
 	if err != nil {
@@ -126,4 +126,12 @@ func runNetworkSetup(args ...string) error {
 		return fmt.Errorf("networksetup %s failed: %s (%w)", strings.Join(args, " "), string(output), err)
 	}
 	return nil
+}
+
+// CleanupStale checks if proxy is set from a previous crash and clears it.
+func CleanupStale(port int) {
+	if IsSet(port) {
+		log.Println("[Sansürsüz] ⚠️ Önceki oturumdan kalan proxy ayarı temizleniyor...")
+		Unset()
+	}
 }

@@ -89,6 +89,9 @@ func main() {
 	log.Printf("[Sansürsüz] DNS: %s | Mod: %s | Port: %d",
 		cfg.DNS.Provider, cfg.Proxy.Mode, cfg.Proxy.Port)
 
+	// Cleanup stale proxy from previous crash BEFORE starting
+	sysproxy.CleanupStale(cfg.Proxy.Port)
+
 	// DNS Prefetch
 	go app.resolver.Prefetch(app.matcher.AllDomains())
 

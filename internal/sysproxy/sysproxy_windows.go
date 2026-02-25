@@ -9,19 +9,39 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 	"syscall"
 	"unsafe"
 )
 
 var (
-	wininet                    = syscall.NewLazyDLL("wininet.dll")
-	procInternetSetOptionW     = wininet.NewProc("InternetSetOptionW")
+	wininet                = syscall.NewLazyDLL("wininet.dll")
+	procInternetSetOptionW = wininet.NewProc("InternetSetOptionW")
 )
 
 const (
 	internetOptionSettingsChanged = 39
 	internetOptionRefresh         = 37
 )
+
+// CleanupStale checks if the proxy is set to our address from a previous crash
+// and clears it. Should be called at startup BEFORE Set().
+func CleanupStale(port int) {
+	expectedAddr := fmt.Sprintf("127.0.0.1:%d", port)
+
+	out, err := exec.Command("reg", "query",
+		`HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings`,
+		"/v", "ProxyServer").Output()
+	if err != nil {
+		return
+	}
+
+	// Check if proxy points to our address
+	if strings.Contains(string(out), expectedAddr) {
+		log.Println("[Sansürsüz] ⚠️ Önceki oturumdan kalan proxy ayarı temizleniyor...")
+		Unset()
+	}
+}
 
 // Set configures the system proxy to use Sansürsüz on Windows.
 func Set(port int) error {
@@ -67,7 +87,7 @@ func IsSet(port int) bool {
 	if err != nil {
 		return false
 	}
-	return len(out) > 0
+	return strings.Contains(string(out), "0x1")
 }
 
 func regSet(key, name, value string) error {

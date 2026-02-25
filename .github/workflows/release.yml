@@ -44,6 +44,9 @@ jobs:
           # Create winres directory structure
           mkdir -p cmd/sansursuz/winres
           
+          # Copy pre-generated icon PNG
+          cp assets/icon_256.png cmd/sansursuz/winres/icon.png
+          
           # Create winres.json manifest
           cat > cmd/sansursuz/winres/winres.json << 'MANIFEST'
           {
@@ -67,29 +70,6 @@ jobs:
             }
           }
           MANIFEST
-          
-          # Convert SVG to PNG for go-winres
-          # Use a simple approach: create a 256x256 icon from SVG
-          if command -v convert &> /dev/null; then
-            convert assets/icon.svg -resize 256x256 cmd/sansursuz/winres/icon.png
-          else
-            # If ImageMagick not available, use Go to download and convert
-            # Fallback: create a simple colored PNG
-            python3 -c "
-          import struct, zlib
-          def create_png(width, height, r, g, b):
-              def chunk(ctype, data):
-                  return struct.pack('>I', len(data)) + ctype + data + struct.pack('>I', zlib.crc32(ctype + data) & 0xffffffff)
-              raw = b''
-              for y in range(height):
-                  raw += b'\x00'
-                  for x in range(width):
-                      raw += bytes([r, g, b, 255])
-              return b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 6, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(raw)) + chunk(b'IEND', b'')
-          with open('cmd/sansursuz/winres/icon.png', 'wb') as f:
-              f.write(create_png(256, 256, 30, 32, 64))
-          "
-          fi
           
           cd cmd/sansursuz && go-winres make
 

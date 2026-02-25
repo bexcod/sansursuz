@@ -127,16 +127,35 @@ header {
 .power-btn.active {
     background: rgba(74, 222, 128, 0.1);
     box-shadow: 0 0 40px var(--accent-green-glow), 0 0 80px rgba(74, 222, 128, 0.1);
+    animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .power-btn.active::before {
-    background: conic-gradient(var(--accent-green), transparent, var(--accent-green));
-    animation: rotate 3s linear infinite;
+    border: 2px solid var(--accent-green);
+    animation: radar-spin 3s linear infinite;
+    opacity: 0.5;
 }
 
-@keyframes rotate {
-    to {
+@keyframes radar-spin {
+    0% {
+        transform: rotate(0deg);
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
         transform: rotate(360deg);
+        opacity: 0.3;
+    }
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 30px var(--accent-green-glow), 0 0 60px rgba(74, 222, 128, 0.08);
+    }
+    50% {
+        box-shadow: 0 0 50px var(--accent-green-glow), 0 0 100px rgba(74, 222, 128, 0.15);
     }
 }
 
