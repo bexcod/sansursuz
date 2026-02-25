@@ -1,4 +1,4 @@
-module github.com/bex/alcatraz
+module github.com/bexcod/sansursuz
 
 go 1.25.0
 

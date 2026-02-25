@@ -44,11 +44,21 @@ Türkiye'deki internet sansürünü aşmak için tasarlanmış, kullanımı kola
 - Bankacılık siteleri güvenle çalışır
 - Verileriniz kaydedilmez, 3. parti sunuculara gönderilmez
 
+## ⚠️ macOS Gatekeeper Uyarısı
+
+macOS ilk çalıştırmada **"kötü amaçlı yazılım içermediğini doğrulayamadı"** uyarısı verebilir. Bu, uygulamanın imzasız olmasından kaynaklanır. Çözmek için:
+
+1. İndirilen dosyaya sağ tıklayın → **Aç** seçin
+2. Veya Terminal'de şu komutu çalıştırın:
+```bash
+xattr -cr ~/Downloads/sansursuz-macos-*
+```
+
 ## 🔧 Geliştiriciler İçin
 
 ```bash
 # Build
-go build -o sansursuz ./cmd/alcatraz/
+go build -o sansursuz ./cmd/sansursuz/
 
 # Çalıştır
 ./sansursuz --no-gui

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bex/alcatraz/internal/domains"
+	"github.com/bexcod/sansursuz/internal/domains"
 )
 
 // Result represents the outcome of a block detection probe.

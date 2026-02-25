@@ -16,7 +16,7 @@
                 <span class="logo-icon">🔓</span>
                 <h1>Sansürsüz</h1>
             </div>
-            <span class="version" id="version">v2.0.0</span>
+            <span class="version" id="version">v2.1.0</span>
         </header>
 
         <div class="power-section">
@@ -69,6 +69,19 @@
                     onchange="updateSetting('port', this.value)" title="Proxy port numarası (varsayılan: 8443)">
             </div>
 
+        </div>
+
+        <div class="domains-section">
+            <div class="domains-header">
+                <span class="setting-icon">📋</span>
+                <span>Özel Domainler</span>
+            </div>
+            <div class="domain-add">
+                <input type="text" id="domainInput" class="domain-input" placeholder="örn: example.com"
+                    onkeydown="if(event.key==='Enter') addDomain()">
+                <button class="domain-add-btn" onclick="addDomain()">+ Ekle</button>
+            </div>
+            <div class="domain-list" id="domainList"></div>
         </div>
 
         <div class="info-bar" id="infoBar">

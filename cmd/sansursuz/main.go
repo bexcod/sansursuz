@@ -12,15 +12,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bex/alcatraz/internal/config"
-	"github.com/bex/alcatraz/internal/dns"
-	"github.com/bex/alcatraz/internal/domains"
-	"github.com/bex/alcatraz/internal/proxy"
-	"github.com/bex/alcatraz/internal/sysproxy"
-	"github.com/bex/alcatraz/internal/ui"
+	"github.com/bexcod/sansursuz/internal/config"
+	"github.com/bexcod/sansursuz/internal/dns"
+	"github.com/bexcod/sansursuz/internal/domains"
+	"github.com/bexcod/sansursuz/internal/proxy"
+	"github.com/bexcod/sansursuz/internal/sysproxy"
+	"github.com/bexcod/sansursuz/internal/ui"
 )
 
-const version = "2.0.0"
+const version = "2.1.0"
 
 // App holds all runtime state.
 type App struct {
@@ -81,6 +81,19 @@ func main() {
 		OnToggle:         app.toggle,
 		OnSettingsChange: app.changeSetting,
 		GetState:         app.getState,
+		GetDomains: func() []string {
+			return app.matcher.AllDomains()
+		},
+		AddDomain: func(domain string) {
+			app.matcher.AddDomain(domain)
+			app.matcher.SaveLearned()
+			log.Printf("[Sansürsüz] Domain eklendi: %s", domain)
+		},
+		RemoveDomain: func(domain string) {
+			app.matcher.RemoveDomain(domain)
+			app.matcher.SaveLearned()
+			log.Printf("[Sansürsüz] Domain kaldırıldı: %s", domain)
+		},
 	})
 
 	go func() {

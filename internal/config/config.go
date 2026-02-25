@@ -116,5 +116,5 @@ func getConfigPath() string {
 	if err != nil {
 		home = "."
 	}
-	return filepath.Join(home, ".alcatraz", "config.yaml")
+	return filepath.Join(home, ".sansursuz", "config.yaml")
 }

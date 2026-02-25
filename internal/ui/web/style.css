@@ -279,6 +279,116 @@ select:hover {
     color: var(--text-primary);
 }
 
+/* Domains Section */
+.domains-section {
+    margin-bottom: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+}
+
+.domains-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.domain-add {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.domain-input {
+    flex: 1;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.domain-input:focus {
+    border-color: var(--accent-blue);
+}
+
+.domain-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.domain-add-btn {
+    background: var(--accent-blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+
+.domain-add-btn:hover {
+    opacity: 0.85;
+}
+
+.domain-list {
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.domain-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.domain-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.domain-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    font-size: 12px;
+    animation: fadeIn 0.2s ease;
+}
+
+.domain-item span {
+    color: var(--text-secondary);
+}
+
+.domain-remove {
+    background: none;
+    border: none;
+    color: var(--accent-red);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.domain-remove:hover {
+    opacity: 1;
+}
+
 /* Info Bar */
 .info-bar {
     text-align: center;

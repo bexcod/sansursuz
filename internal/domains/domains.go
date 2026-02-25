@@ -61,6 +61,15 @@ func (m *Matcher) AddDomain(domain string) {
 	m.learned[d] = struct{}{}
 }
 
+// RemoveDomain removes a domain from the blocklist.
+func (m *Matcher) RemoveDomain(domain string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	d := strings.ToLower(strings.TrimSpace(domain))
+	delete(m.domains, d)
+	delete(m.learned, d)
+}
+
 // AddDomains adds multiple domains to the blocklist.
 func (m *Matcher) AddDomains(domains []string) {
 	m.mu.Lock()
@@ -126,7 +135,7 @@ func (m *Matcher) LearnedCount() int {
 	return len(m.learned)
 }
 
-// SaveLearned writes auto-detected domains to ~/.alcatraz/learned.txt
+// SaveLearned writes auto-detected domains to ~/.sansursuz/learned.txt
 func (m *Matcher) SaveLearned() {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -143,7 +152,7 @@ func (m *Matcher) SaveLearned() {
 	}
 
 	var sb strings.Builder
-	sb.WriteString("# Alcatraz — Otomatik tespit edilen engelli domainler\n")
+	sb.WriteString("# Sansürsüz — Otomatik tespit edilen engelli domainler\n")
 	sb.WriteString("# Bu dosyayı silmek öğrenilen listeyi sıfırlar\n\n")
 	for d := range m.learned {
 		sb.WriteString(d)
@@ -158,7 +167,7 @@ func (m *Matcher) SaveLearned() {
 	log.Printf("[Sansürsüz] 💾 %d öğrenilen domain kaydedildi: %s", len(m.learned), path)
 }
 
-// LoadLearned reads auto-detected domains from ~/.alcatraz/learned.txt
+// LoadLearned reads auto-detected domains from ~/.sansursuz/learned.txt
 func (m *Matcher) LoadLearned() {
 	path := learnedFilePath()
 	data, err := os.ReadFile(path)
@@ -189,7 +198,7 @@ func learnedFilePath() string {
 	if err != nil {
 		home = "."
 	}
-	return filepath.Join(home, ".alcatraz", "learned.txt")
+	return filepath.Join(home, ".sansursuz", "learned.txt")
 }
 
 // String returns a summary of the matcher state.

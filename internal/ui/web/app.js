@@ -6,11 +6,13 @@ let state = {
     active: false,
     dns: 'cloudflare',
     mode: 'selective',
-    port: 8443
+    port: 8443,
+    domains: []
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchStatus();
+    fetchDomains();
     setInterval(fetchStatus, 3000);
 });
 
@@ -22,6 +24,17 @@ async function fetchStatus() {
         updateUI();
     } catch (e) {
         setStatus(false, 'Bağlantı kesildi');
+    }
+}
+
+async function fetchDomains() {
+    try {
+        const res = await fetch(`${API}/api/domains`);
+        const data = await res.json();
+        state.domains = data.domains || [];
+        renderDomains();
+    } catch (e) {
+        console.error('Domains fetch error:', e);
     }
 }
 
@@ -57,6 +70,51 @@ async function updateSetting(key, value) {
 
 function setMode(mode) {
     updateSetting('mode', mode);
+}
+
+async function addDomain() {
+    const input = document.getElementById('domainInput');
+    const domain = input.value.trim().toLowerCase();
+    if (!domain || !domain.includes('.')) return;
+
+    try {
+        await fetch(`${API}/api/domains`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'add', domain: domain })
+        });
+        input.value = '';
+        fetchDomains();
+    } catch (e) {
+        console.error('Add domain error:', e);
+    }
+}
+
+async function removeDomain(domain) {
+    try {
+        await fetch(`${API}/api/domains`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'remove', domain: domain })
+        });
+        fetchDomains();
+    } catch (e) {
+        console.error('Remove domain error:', e);
+    }
+}
+
+function renderDomains() {
+    const list = document.getElementById('domainList');
+    if (!state.domains || state.domains.length === 0) {
+        list.innerHTML = '';
+        return;
+    }
+    list.innerHTML = state.domains.map(d =>
+        `<div class="domain-item">
+            <span>${d}</span>
+            <button class="domain-remove" onclick="removeDomain('${d}')" title="Kaldır">✕</button>
+        </div>`
+    ).join('');
 }
 
 function updateUI() {

@@ -33,6 +33,9 @@ type Callbacks struct {
 	OnToggle         func() bool                   // Toggle proxy, returns new active state
 	OnSettingsChange func(key, value string) error // Change a setting
 	GetState         func() AppState               // Get current state
+	GetDomains       func() []string               // Get custom domain list
+	AddDomain        func(domain string)           // Add a custom domain
+	RemoveDomain     func(domain string)           // Remove a custom domain
 }
 
 // WebUI serves the embedded web interface and REST API.
@@ -66,6 +69,7 @@ func (w *WebUI) Start(ctx context.Context) error {
 	mux.HandleFunc("/api/status", w.handleStatus)
 	mux.HandleFunc("/api/toggle", w.handleToggle)
 	mux.HandleFunc("/api/settings", w.handleSettings)
+	mux.HandleFunc("/api/domains", w.handleDomains)
 
 	addr := fmt.Sprintf("127.0.0.1:%d", w.port)
 	w.server = &http.Server{
@@ -166,4 +170,44 @@ func (w *WebUI) handleSettings(rw http.ResponseWriter, r *http.Request) {
 
 	rw.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(rw).Encode(map[string]string{"status": "ok"})
+}
+
+// GET/POST /api/domains
+func (w *WebUI) handleDomains(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Set("Content-Type", "application/json")
+
+	if r.Method == http.MethodGet {
+		domains := w.callbacks.GetDomains()
+		json.NewEncoder(rw).Encode(map[string][]string{"domains": domains})
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		var body struct {
+			Action string `json:"action"`
+			Domain string `json:"domain"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(rw, "invalid json", http.StatusBadRequest)
+			return
+		}
+
+		w.mu.Lock()
+		defer w.mu.Unlock()
+
+		switch body.Action {
+		case "add":
+			w.callbacks.AddDomain(body.Domain)
+		case "remove":
+			w.callbacks.RemoveDomain(body.Domain)
+		default:
+			http.Error(rw, "invalid action", http.StatusBadRequest)
+			return
+		}
+
+		json.NewEncoder(rw).Encode(map[string]string{"status": "ok"})
+		return
+	}
+
+	http.Error(rw, "method not allowed", http.StatusMethodNotAllowed)
 }

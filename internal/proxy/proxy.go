@@ -11,9 +11,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bex/alcatraz/internal/dns"
-	"github.com/bex/alcatraz/internal/domains"
-	tlsparser "github.com/bex/alcatraz/internal/tls"
+	"github.com/bexcod/sansursuz/internal/dns"
+	"github.com/bexcod/sansursuz/internal/domains"
+	tlsparser "github.com/bexcod/sansursuz/internal/tls"
 )
 
 // Server is the local HTTP/CONNECT proxy that applies DPI circumvention.
